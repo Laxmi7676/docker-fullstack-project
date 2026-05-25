@@ -1,0 +1,71 @@
+services:
+
+  frontend:
+    image: nginx:latest
+    container_name: nginx-container
+
+    ports:
+      - "80:80"
+
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+
+    depends_on:
+      - backend
+
+    networks:
+      - app-network
+
+
+
+  backend:
+    build: .
+    container_name: flask-backend
+
+    ports:
+      - "5000:5000"
+
+    volumes:
+      - .:/app
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    networks:
+      - app-network
+
+
+
+  db:
+    image: mysql:8
+    container_name: mysql-db
+
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: mydb
+
+    ports:
+      - "3306:3306"
+
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - app-network
+
+
+
+networks:
+  app-network:
+
+
+
+volumes:
+  mysql-data:
